@@ -15,6 +15,10 @@ public class Game {
 
     private int round = 1;
 
+    /**
+     * Constructs a new Game instance. Initializes the deck as a Stack and shuffles it
+     * to prepare for the game.
+    */
     public Game() {
         this.deck = new Stack<>();
         this.shuffle();
@@ -28,6 +32,13 @@ public class Game {
         return this.players;
     }
 
+    /**
+     * Initializes a new game with the specified number of players.
+     * Prompts each player to enter their name, creates a new {@link Player} object for each player,
+     * deals two cards to each player and the dealer, and starts the game.
+     *
+     * @param players the number of players participating in the game
+    */
     public void start(int players){
         Scanner scanner = new Scanner(System.in);
         for(int i = 0; i < players; i++) {
@@ -44,6 +55,12 @@ public class Game {
         while(!this.players.isEmpty());
     }
 
+    /**
+     * Executes a single round of the Blackjack game. This includes prompting each player to place a bet,
+     * allowing each player to take their turn, and then having the dealer take their turn. After all turns
+     * are completed, the results are evaluated to determine winners. The round concludes with a display of
+     * results and preparation for the next round.
+    */
     public void round() {
         this.curr_round();
 
@@ -90,6 +107,12 @@ public class Game {
         this.round++;
     }
 
+    /**
+     * Displays the current round number using ASCII art.
+     * This method creates a visual representation of the round number by combining
+     * ASCII art for the word "ROUND" with ASCII digits representing the current round number.
+     * The resulting ASCII art is then printed to the console.
+    */
     public void curr_round() {
         Colors.set(Colors.WHITE);
 
@@ -116,6 +139,17 @@ public class Game {
         }
     }
 
+    /**
+     * Converts the current round number into a list of ASCII art representations of its digits.
+     * This method breaks down the round number into individual digits and maps each digit
+     * to its corresponding ASCII art representation.
+     *
+     * @return A List of Strings, where each String is an ASCII art representation of a digit
+     *         from the current round number. The digits are in reverse order (least significant
+     *         digit first).
+     * @throws IllegalStateException if an unexpected digit value is encountered (which should
+     *         never happen with valid integer division and modulo operations)
+    */
     private List<String> digits() {
         int curr_round = round;
         List<String> digits = new ArrayList<>();
@@ -138,17 +172,33 @@ public class Game {
         return digits;
     }
 
+    /**
+     * This method clears the current deck, shuffles the original list of cards,
+     * and then adds the shuffled cards to the deck. This ensures that the deck
+     * is in a random order for each new game.
+    */
     public void shuffle() {
         this.deck.clear();
         Collections.shuffle(CARDS);
         this.deck.addAll(CARDS);
     }
 
+    /**
+     * Deals a card to each player and the dealer.
+     * It calls the {@link Dealer#take_card()} method to deal a card to the dealer,
+     * and then iterates over the list of players to deal a card to each player.
+    */
     public void deal() {
         this.dealer.take_card();
         for(Player player : players) player.take_card();
     }
 
+    /**
+     * Deals a card from the deck to the next available player or the dealer.
+     * If the deck is empty, it shuffles the original list of cards and repopulates the deck.
+     *
+     * @return The card that was dealt from the deck.
+    */
     public Card take_card() {
         if(this.deck.empty()) this.shuffle();
         return this.deck.pop();

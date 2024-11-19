@@ -37,6 +37,14 @@ public class Card {
     private final Suit suit;
     private boolean reverse = false;
 
+    /**
+     * Constructs a new Card object with the given value and suit.
+     *
+     * @param value The value of the card. It can be one of the following:
+     *              Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace.
+     * @param suit  The suit of the card. It can be one of the following:
+     *              Club, Spade, Diamond, Heart.
+    */
     public Card(Value value, Suit suit) {
         this.value = value;
         this.suit = suit;
@@ -46,10 +54,25 @@ public class Card {
         return this.reverse;
     }
 
+    public Value value() {
+        return this.value;
+    }
+
+    public Suit suit() {
+        return this.suit;
+    }
+
     public void reverse(boolean reverse) {
         this.reverse = reverse;
     }
 
+    /**
+     * Returns the ASCII representation of the card.
+     *
+     * @return A string representing the card in ASCII format. If the card is reversed,
+     *         it returns the ASCII representation of the back of the card.
+     *         The ASCII representation is color-coded based on the card's suit.
+    */
     public String ascii() {
         return this.reverse ? ASCII.CARD_REVERSE : (switch(this.value) {
             case Two -> ASCII.CARD_TWO;
@@ -68,6 +91,13 @@ public class Card {
         }).replaceAll("x", SYMBOLS.get(this.suit));
     }
 
+    /**
+     * Creates a standard deck of 52 playing cards.
+     *
+     * @return An array of Card objects representing a full deck of 52 playing cards.
+     *         The deck is ordered by value and suit, with each suit (Club, Spade, Diamond, Heart)
+     *         followed by each value (Two, Three, ..., King, Ace).
+    */
     public static Card[] deck() {
         List<Card> deck = new ArrayList<>();
         for(Value value : Value.values())
@@ -76,6 +106,11 @@ public class Card {
         return deck.toArray(new Card[0]);
     }
 
+    /**
+     * Prints a list of cards in ASCII format.
+     *
+     * @param cards A list of Card objects to be printed.
+    */
     public static void print(List<Card> cards) {
         int n = ASCII.CARD_TWO.split("\n").length;
         List<List<String>> rows = new ArrayList<>();
@@ -96,16 +131,12 @@ public class Card {
         }
     }
 
+    /**
+     * Prints the ASCII representation of the card to the console.
+     * If the card is reversed, it prints the ASCII representation of the back of the card.
+    */
     public void print() {
         String color = this.suit.equals(Suit.Club) || this.suit.equals(Suit.Spade) || this.reverse ? Colors.WHITE : Colors.RED;
         System.out.println(color + this.ascii());
-    }
-
-    public Value value() {
-        return this.value;
-    }
-
-    public Suit suit() {
-        return this.suit;
     }
 }
