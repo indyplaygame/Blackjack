@@ -41,7 +41,7 @@ public class Game {
         this.deal();
 
         do this.round();
-        while(this.players.stream().noneMatch(Player::folded));
+        while(!this.players.isEmpty());
     }
 
     public void round() {
@@ -49,12 +49,12 @@ public class Game {
 
         Scanner scanner = new Scanner(System.in);
         for(Player player : this.players) {
-            System.out.print(Colors.WHITE + "Enter " + player.name() + (player.name().endsWith("s") ? "'" : "'s") + " bet: ");
+            System.out.print(Colors.WHITE + "Enter " + player.name() + (player.name().endsWith("s") ? "'" : "'s") + " bet (" + player.balance() + "$): ");
             int bet = scanner.nextInt();
             scanner.nextLine();
 
-            while(bet < 2 || bet > 1000) {
-                System.out.print("Your bet must be higher than 2$ and lower than 1000$. New bet: ");
+            while(bet < 2 || bet > player.balance()) {
+                System.out.print("Your bet must be higher than 2$ and lower than " + player.balance() + "$. New bet: ");
                 bet = scanner.nextInt();
                 scanner.nextLine();
             }
@@ -62,7 +62,7 @@ public class Game {
             player.bet(bet);
         }
 
-        for(Player player : this.players) {
+        for(Player player : new ArrayList<>( this.players)) {
             if(this.deck.empty()) this.shuffle();
             player.turn();
         }
@@ -70,21 +70,7 @@ public class Game {
         this.dealer.hand_value();
         while(this.dealer.value() <= 16) this.dealer.take_card();
 
-        for(Player player : players) {
-            // TODO: check all player's hands
-            System.out.print(Colors.RED);
-            if(player.value() > 21) System.out.println("Dealer beats " + player.name() + "."); // Player loses
-            else if(this.dealer().cards().size() == 6 && this.dealer.value() <= 21) System.out.println("Dealer beats " + player.name() + "."); // Player loses
-            else if((player.cards().size() < 6) && (this.dealer.cards().size() == 2 && this.dealer.value() == 21)) System.out.println("Dealer beats " + player.name() + "."); // Player loses
-            else if(player.value() <= this.dealer().value() && this.dealer.value() <= 21) System.out.println("Dealer beats " + player.name() + "."); // Player loses
-            else {
-                System.out.print(Colors.WHITE);
-                final double val = player.value() == 21 && player.cards().size() == 2 && !player.is_split() ? 2.5*player.bet() : 2*player.bet();
-                player.add_balance(val);
-                System.out.println(player.name() + " wins (" + Colors.GREEN + "+" + val + "$" + Colors.WHITE + "). Current balance: " + player.balance() + "$.");
-            }
-            System.out.print(Colors.WHITE);
-        }
+        for(Player player : players) player.check_win();
 
         for(Player player : players) {
             player.showoff();
@@ -105,7 +91,7 @@ public class Game {
     }
 
     public void curr_round() {
-        System.out.print(Colors.WHITE);
+        Colors.set(Colors.WHITE);
 
         int n = ASCII.ROUND.split("\n").length;
         List<List<String>> rows = new ArrayList<>();
@@ -164,6 +150,7 @@ public class Game {
     }
 
     public Card take_card() {
+        if(this.deck.empty()) this.shuffle();
         return this.deck.pop();
     }
 }

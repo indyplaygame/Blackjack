@@ -66,10 +66,10 @@ public class Player {
             return;
         }
 
-        final String color = (this.value > 21 ? Colors.RED : (this.value == 21 ? Colors.GREEN : Colors.WHITE));
+        final String color = (this.value > 21 ? Colors.RED : ((this.value == 21 && this.cards.size() == 2) || this.cards.size() == 6 ? Colors.GREEN : Colors.WHITE));
         System.out.println(
                 Colors.WHITE + this.name + (this.name.endsWith("s") ? "'" : "'s") + " cards (" +
-                color + (this.value == 21 && this.cards.size() == 2 ? "Blackjack" : this.value) + Colors.WHITE + "):"
+                color + (this.value < 21 && this.cards.size() == 6 ? "Charlie" : (this.value == 21 && this.cards.size() == 2 ? "Blackjack" : this.value)) + Colors.WHITE + "):"
         );
         if(!this.folded) {
             Card.print(this.cards);
@@ -110,26 +110,43 @@ public class Player {
         Game.dealer().showoff();
 
         String action;
+        Set<String> exit = Set.of("fold", "f", "stand", "pass", "quit", "q");
         do {
-            System.out.print(Colors.WHITE + "Action (fold, hit, double down, split, stand): ");
+            System.out.print(Colors.WHITE + "Action (fold, hit, double down, split, stand, quit): ");
             Scanner input = new Scanner(System.in);
             action = input.nextLine();
 
             switch(action) {
-                case "fold", "f":
-                    this.fold();
-                    break;
-                case "hit", "h":
-                    this.hit();
-                    break;
-                case "double down", "dd":
-                    this.double_down();
-                    break;
-                case "split", "s":
-                    this.split();
-                    break;
+                case "fold", "f" -> this.fold();
+                case "hit", "h" -> this.hit();
+                case "double down", "dd" -> this.double_down();
+                case "split", "s" -> this.split();
+                case "quit", "q" -> this.quit();
             }
-        } while(!(action.equals("stand") || action.equals("pass")) && this.value <= 21);
+        } while(!exit.contains(action) && this.value <= 21 && !this.split);
+    }
+
+    public void check_win() {
+        if(this.split) {
+            this.left.check_win();
+            this.right.check_win();
+            return;
+        }
+
+        Colors.set(Colors.RED);
+        if(this.value > 21) System.out.println("Player " + this.name + " lost against dealer. Current balance: " + this.balance() + "$.");
+        else if(this.cards.size() < 6 && Game.dealer().cards().size() == 6 && Game.dealer().value() <= 21)
+            System.out.println("Player " + this.name + " lost against dealer. Current balance: " + this.balance() + "$.");
+        else if(this.cards.size() < 6 && this.value <= Game.dealer().value() && Game.dealer().value() <= 21)
+            System.out.println("Player " + this.name + " lost against dealer. Current balance: " + this.balance() + "$.");
+        else {
+            final double val = this.value == 21 && this.cards.size() == 2 && !this.split ? 2.5*this.bet : 2*this.bet;
+            this.add_balance(val);
+
+            Colors.set(Colors.WHITE);
+            System.out.println("Player " + this.name + " won against dealer. (" + Colors.GREEN + "+" + val + "$" + Colors.WHITE + "). Current balance: " + this.balance() + "$.");
+        }
+        Colors.set(Colors.WHITE);
     }
 
     public void add_card(Card card) {
@@ -138,13 +155,15 @@ public class Player {
     }
 
     public void take_card() {
-        this.cards.add(Game.take_card());
-        this.hand_value();
+        this.add_card(Game.take_card());
     }
 
     public void clear_cards() {
         this.cards.clear();
         this.value = 0;
+        this.split = false;
+        this.left = null;
+        this.right = null;
     }
 
     public void add_balance(double amount) {
@@ -154,7 +173,7 @@ public class Player {
 
     public void bet(int bet) {
         this.bet = bet;
-        this.balance -= bet;
+        this.add_balance(-bet);
     }
 
     private void hit() {
@@ -170,6 +189,11 @@ public class Player {
     private void fold() {
         this.clear_cards();
         this.folded = true;
+        this.add_balance((double) this.bet / 2);
+    }
+
+    private void quit() {
+        Game.players().remove(this);
     }
 
     private void split() {
@@ -179,9 +203,15 @@ public class Player {
         this.left = new Player(this, this.name + " (Left Hand)");
         this.right = new Player(this, this.name + " (Right Hand)");
         this.left.add_card(this.cards.remove(0));
-        this.right.add_card(this.cards.remove(1));
+        this.right.add_card(this.cards.remove(0));
+        this.add_balance(this.bet);
         this.left.bet(this.bet);
         this.right.bet(this.bet);
+        this.left.take_card();
+        this.right.take_card();
         this.split = true;
+
+        this.left.turn();
+        this.right.turn();
     }
 }

@@ -23,7 +23,7 @@ public class Main {
             do {
                 System.out.print(Colors.WHITE + "Enter number of players (max 6): ");
                 n = scanner.nextInt();
-            } while(n < 2 || n > 6);
+            } while(n < 1 || n > 6);
         } catch (InputMismatchException e) {
             System.out.println("Error: expected a number.");
         }
